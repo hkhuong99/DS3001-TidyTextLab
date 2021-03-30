@@ -1,0 +1,20 @@
+---
+title: "Analysis"
+author: "Allison Feeney"
+date: "3/30/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Conclusions:
+South East:
+Looking at both bing and afinn sentiment analyses, the South East tends to have a slightly-positive outlook on data science. The result of the bing analysis was 59% positive and the largest bin size in the afinn histogram was at 2 out of the -5 to 5 range. 
+The positive skew may be due the development of the Data Science School at UVA (the topic of a couple of articles analyzed). But is offset by a lack of knowledge and job opportunities for data science in the region. 
+This can be offset by DS job growth in major industries of the region such as agriculture, fossil fuels, and manufacturing. 
+
+Rocky Mountain Region:
+Looking at both bing and afinn sentiment analyses, the Rocky Mountain Region tends to have a slightly-negative outlook on data science. The result of the bing analysis was 56% negative and the largest bin size in the afinn histogram was at -2 out of the -5 to 5 range. 
+This may be due to limited data science job opportunities outside of major cities (Denver, Salt Lake,...) and lack of knowledge about the field. 
+Since the sentiment is relatively neutral, there is definitely opportunity to garner support for the data science in the region with increased publicity and job growth. Also starting data science programs at major univerisities in the region could also increase support as well. 
