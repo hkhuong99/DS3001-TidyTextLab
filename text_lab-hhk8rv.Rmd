@@ -1,0 +1,362 @@
+---
+title: "text_lab"
+author: "Hallie Khuong"
+date: "3/30/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+library(dplyr)
+library(tidyverse)
+library(tidytext)
+library(ggwordcloud)
+library(gutenbergr)
+library(textdata)
+library(textreadr)
+library(ggplot2)
+```
+
+```{r, echo = FALSE, include = FALSE}
+# Congratulations you've successfully transferred from being a NBA 'quant' scout to a consultant specializing in US national sentiment! You've been hired by a non-profit in secret to track the level of support nationally and regionally for the field of Data Science. The goal is to get a general idea of patterns associated with articles being written on the broad topic of Data Science (you can also choose to select a sub-topic). In doing so your data science team has decided to explore periodicals from around the country in a effort to track the relative positive or negative sentiment and word frequencies. Luckily your team has access to a world class library search engine call LexusNexus (NexusUni) that provides access to newspapers from around the country dating back decades. You'll first need to decided what words you want to track and what time might be interesting to begin your search. 
+# 
+# You'll need to select several newspapers from different regions in the country limiting the search to 100 articles from each paper, run sentiment analysis with each newspaper serving as a corpus and then compare the level of positive or negative connotation associated with the outcomes. Also, run tf-idf on each corpus (newspapers) and work to compare the differences between the distributions (5 to 6 newspapers should be fine)
+# 
+# Your main goal (and the goal of all practicing data scientists!) is to translate this information into action. What patterns do you see, why do you believe this to be the case? What additional information might you want? Be as specific as possible, but keep in mind this is an initial exploratory effort...more analysis might be needed...but the result can and should advise the next steps you present to the firm. 
+# 
+# 
+# Please submit a cleanly knitted HTML file describing in detail the steps you took along the way, the results of your analysis and most importantly the implications/next steps you would recommend.  You will report your final results and recommendations next week in class. This will be 5 minutes per group. 
+# 
+# You will need also need to try to collaborate within your group via a GitHub repo, if you choose it would be fine to assign 1 or 2 regions/newspapers per group member, that can then be added to the repo. Create a main repo, everyone should work in this repo and submit independently using branching/pull requests. If you want to try to use pull request to combine everyone's work into a final project, please do so, but it's not a requirement. Select a repo owner that sets up access (push access) for the week, we will rotate owners next week. Also, submit a link to your the GitHub repo (every group member can submit the same link). 
+# 
+# Create collaborations in GitHub: https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-collaborative-development-models
+# 
+# Rstudio Guidance on Git and Github (Including Branching/Pull Requests): https://r-pkgs.org/git.html#git-branch
+# 
+# 
+# Here is the link to the database search via the UVA Library that should lead you to LexusNexus (Now Nexas Uni)
+# https://guides.lib.virginia.edu/az.php?a=l
+```
+
+```{r setup data,  echo = FALSE, warning = FALSE, message = FALSE}
+#set up
+#read in data
+newyork <- read_rtf("NewYork.RTF", remove.empty = TRUE)
+oregon <- read_rtf("Oregon.RTF", remove.empty = TRUE)
+oklahoma <- read_rtf("Oklahoma.RTF", remove.empty = TRUE)
+illinois <- read_rtf("Illinois.RTF", remove.empty = TRUE)
+virginia <- read_rtf("Virginia.RTF", remove.empty = TRUE)
+utah <- read_rtf("Utah.RTF", remove.empty = TRUE)
+
+#convert to tibble
+newyork_tibble <- tibble(text = newyork)
+oregon_tibble <- tibble(text = oregon)
+oklahoma_tibble <- tibble(text = oklahoma)
+illinois_tibble <- tibble(text = illinois)
+virginia_tibble <- tibble(text = virginia)
+utah_tibble <- tibble(text = utah)
+
+#get the words
+newyork_words <- newyork_tibble %>%
+  unnest_tokens(word, text)
+
+oregon_words <- oregon_tibble %>%
+  unnest_tokens(word, text)
+
+oklahoma_words <- oklahoma_tibble %>%
+  unnest_tokens(word, text)
+
+illinois_words <- illinois_tibble %>%
+  unnest_tokens(word, text)
+
+virginia_words <- virginia_tibble %>%
+  unnest_tokens(word, text)
+
+utah_words <- utah_tibble %>%
+  unnest_tokens(word, text)
+
+#count of words
+newyork_count <- newyork_words %>%
+  count(word, sort=TRUE)
+
+newyork_count$word <- as.factor(newyork_count$word)
+
+oregon_count <- oregon_words %>%
+  count(word, sort=TRUE)
+
+oregon_count$word <- as.factor(oregon_count$word)
+
+oklahoma_count <- oklahoma_words %>%
+  count(word, sort=TRUE)
+
+oklahoma_count$word <- as.factor(oklahoma_count$word)
+
+illinois_count <- illinois_words %>%
+  count(word, sort=TRUE)
+
+illinois_count$word <- as.factor(illinois_count$word)
+
+virginia_count <- virginia_words %>%
+  count(word, sort=TRUE)
+
+virginia_count$word <- as.factor(virginia_count$word)
+
+utah_count <-utah_words %>%
+  count(word, sort=TRUE)
+
+utah_count$word <- as.factor(utah_count$word)
+
+#remove commonly used words
+newyork_words_sw <- newyork_words %>%
+      anti_join(stop_words)
+
+oregon_words_sw <- oregon_words %>%
+      anti_join(stop_words)
+
+oklahoma_words_sw <- oklahoma_words %>%
+      anti_join(stop_words)
+
+illinois_words_sw <- illinois_words %>%
+      anti_join(stop_words)
+
+virginia_words_sw <- virginia_words %>%
+      anti_join(stop_words)
+
+utah_words_sw <- utah_words %>%
+      anti_join(stop_words)
+
+#count of words with stop words removed
+newyork_count_sw <- newyork_words_sw %>%
+  count(word, sort=TRUE)
+
+newyork_count_sw$word <- as.factor(newyork_count_sw$word)
+
+oregon_count_sw <- oregon_words_sw %>%
+  count(word, sort=TRUE)
+
+oregon_count_sw$word <- as.factor(oregon_count_sw$word)
+
+oklahoma_count_sw <- oklahoma_words_sw %>%
+  count(word, sort=TRUE)
+
+oklahoma_count_sw$word <- as.factor(oklahoma_count_sw$word)
+
+illinois_count_sw <- illinois_words_sw %>%
+  count(word, sort=TRUE)
+
+illinois_count_sw$word <- as.factor(illinois_count_sw$word)
+
+virginia_count_sw <- virginia_words_sw %>%
+  count(word, sort=TRUE)
+
+virginia_count_sw$word <- as.factor(virginia_count_sw$word)
+
+utah_count_sw <- utah_words_sw %>%
+  count(word, sort=TRUE)
+
+utah_count_sw$word <- as.factor(utah_count_sw$word)
+```
+
+```{r graph data, echo = FALSE, include = FALSE}
+#graph data
+ggplot(data = newyork_count_sw, aes(x = fct_reorder(word,n), y = n)) +
+  geom_col() +
+  coord_flip()+
+  theme_light()
+
+ggplot(data = oregon_count_sw, aes(x = fct_reorder(word,n), y = n)) +
+  geom_col() +
+  coord_flip()+
+  theme_light()
+
+ggplot(data = oklahoma_count_sw, aes(x = fct_reorder(word,n), y = n)) +
+  geom_col() +
+  coord_flip()+
+  theme_light()
+
+ggplot(data = illinois_count_sw, aes(x = fct_reorder(word,n), y = n)) +
+  geom_col() +
+  coord_flip()+
+  theme_light()
+
+ggplot(data = virginia_count_sw, aes(x = fct_reorder(word,n), y = n)) +
+  geom_col() +
+  coord_flip()+
+  theme_light()
+
+ggplot(data = utah_count_sw, aes(x = fct_reorder(word,n), y = n)) +
+  geom_col() +
+  coord_flip()+
+  theme_light()
+```
+
+```{r sentiment analysis,  echo = FALSE, warning = FALSE, message = FALSE}
+#sentiment analysis
+newyork_sentiment_bing <- newyork_words_sw %>% #positive/negative
+  inner_join(get_sentiments("bing"))
+
+newyork_sentiment_bing
+
+oregon_sentiment_bing <- oregon_words_sw %>% #positive/negative
+  inner_join(get_sentiments("bing"))
+
+oregon_sentiment_bing
+
+oklahoma_sentiment_bing <- oklahoma_words_sw %>% #positive/negative
+  inner_join(get_sentiments("bing"))
+
+oklahoma_sentiment_bing
+
+illinois_sentiment_bing <- illinois_words_sw %>% #positive/negative
+  inner_join(get_sentiments("bing"))
+
+illinois_sentiment_bing
+
+virginia_sentiment_bing <- virginia_words_sw %>% #positive/negative
+  inner_join(get_sentiments("bing"))
+
+virginia_sentiment_bing
+
+utah_sentiment_bing <- utah_words_sw %>% #positive/negative
+  inner_join(get_sentiments("bing"))
+
+utah_sentiment_bing
+
+newyork_sentiment_table <- newyork_sentiment_bing %>% count(sentiment)
+newyork_sentiment_table
+
+oregon_sentiment_table <- oregon_sentiment_bing %>% count(sentiment)
+oregon_sentiment_table
+
+oklahoma_sentiment_table <- oklahoma_sentiment_bing %>% count(sentiment)
+oklahoma_sentiment_table
+
+illinois_sentiment_table <- illinois_sentiment_bing %>% count(sentiment)
+illinois_sentiment_table
+
+virginia_sentiment_table <- virginia_sentiment_bing %>% count(sentiment)
+virginia_sentiment_table
+
+utah_sentiment_table <- utah_sentiment_bing %>% count(sentiment)
+utah_sentiment_table
+```
+
+```{r sentiment range, echo = FALSE}
+#sentiment range
+newyork_sentiment_affin <- newyork_words_sw %>%
+  inner_join(get_sentiments("afinn")) #using a inner join to match words and add the sentiment variable
+
+ggplot(data = newyork_sentiment_affin,aes(x=value)) +
+  geom_histogram() +
+  ggtitle("New York Sentiment Range") +
+  theme_minimal()
+
+oregon_sentiment_affin <- oregon_words_sw %>%
+  inner_join(get_sentiments("afinn"))
+
+ggplot(data = oregon_sentiment_affin, aes(x=value)) +
+  geom_histogram() +
+  ggtitle("Oregon Sentiment Range") +
+  theme_minimal()
+
+oklahoma_sentiment_affin <- oklahoma_words_sw %>%
+  inner_join(get_sentiments("afinn"))
+
+ggplot(data = oklahoma_sentiment_affin, aes(x=value)) +
+  geom_histogram() +
+  ggtitle("Oklahoma Sentiment Range") +
+  theme_minimal()
+
+illinois_sentiment_affin <- illinois_words_sw %>%
+  inner_join(get_sentiments("afinn"))
+
+ggplot(data = illinois_sentiment_affin, aes(x=value)) +
+  geom_histogram() +
+  ggtitle("Illinois Sentiment Range") +
+  theme_minimal()
+
+virginia_sentiment_affin <- virginia_words_sw %>%
+  inner_join(get_sentiments("afinn"))
+
+ggplot(data = virginia_sentiment_affin, aes(x=value)) +
+  geom_histogram() +
+  ggtitle("Virginia Sentiment Range") +
+  theme_minimal()
+
+utah_sentiment_affin <- utah_words_sw %>%
+  inner_join(get_sentiments("afinn"))
+
+ggplot(data = utah_sentiment_affin, aes(x=value)) +
+  geom_histogram() +
+  ggtitle("Utah Sentiment Range") +
+  theme_minimal()
+```
+
+```{r word cloud, echo = FALSE}
+#word cloud
+set.seed(226)
+
+ggplot(newyork_count_sw[1:50,], aes(label = word, size = n)) +
+  geom_text_wordcloud() +
+  theme_minimal()
+
+ggplot(oregon_count_sw[1:50,], aes(label = word, size = n)) +
+  geom_text_wordcloud() +
+  theme_minimal()
+
+ggplot(oklahoma_count_sw[1:50,], aes(label = word, size = n)) +
+  geom_text_wordcloud() +
+  theme_minimal()
+
+ggplot(illinois_count_sw[1:50,], aes(label = word, size = n)) +
+  geom_text_wordcloud() +
+  theme_minimal()
+
+ggplot(virginia_count_sw[1:50,], aes(label = word, size = n)) +
+  geom_text_wordcloud() +
+  theme_minimal()
+
+ggplot(utah_count_sw[1:50,], aes(label = word, size = n)) +
+  geom_text_wordcloud() +
+  theme_minimal()
+```
+
+```{r term frequency,  echo = FALSE, warning = FALSE, message = FALSE}
+#term frequency
+data_prep <- function(x){
+  i <- as_tibble(t(x))
+  ii <- unite(i, "text", remove = TRUE, sep = "")
+  return_string <- ii %>% mutate(text = gsub("[^a-zA-Z]", " ", text)) #removes everything but letters
+  return_string
+}
+
+newyork_bag <- data_prep(newyork)
+oregon_bag <- data_prep(oregon)
+oklahoma_bag <- data_prep(oklahoma)
+illinois_bag <- data_prep(illinois)
+virginia_bag <- data_prep(virginia)
+utah_bag <- data_prep(utah)
+
+states <- c("New York","Oregon", "Oklahoma", "Illinois", "Virginia", "Utah")
+
+tf_idf_text <- tibble(states, text=t(tibble(newyork_bag, oregon_bag, oklahoma_bag, illinois_bag, virginia_bag, utah_bag, .name_repair = "universal")))
+
+word_count <- tf_idf_text %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words) %>% #removes stop words
+  count(states, word, sort = TRUE)
+
+total_words <- word_count %>% 
+  group_by(states) %>% 
+  summarize(total = sum(n))
+
+ds_words <- left_join(word_count, total_words)
+
+ds_words <- ds_words %>%
+  bind_tf_idf(word, states, n)
+
+ds_words
+```
