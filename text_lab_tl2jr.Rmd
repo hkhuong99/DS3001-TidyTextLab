@@ -1,0 +1,181 @@
+---
+title: "tidytext"
+author: "Tiffanie Luong"
+date: "3/30/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE, message = FALSE}
+library(tidyverse)
+#install.packages("tidytext")
+library(tidytext)
+#install.packages("ggwordcloud")
+library(ggwordcloud)
+#install.packages('textdata')
+library(textdata)
+setwd("/cloud/project/tidytext")
+library(striprtf)
+library(tm)
+#install.packages("textreadr")
+library(textreadr)
+library(dplyr)
+
+```
+
+Once cleaned, we ran both "bing" and "afinn" sentiment analyses to gauge if articles that regard to data science have a positive sentiment or a negative sentiment.
+
+```{r, message = FALSE, echo = FALSE}
+# oklahoma
+
+# reading in rtf file
+oklahoma <- read_rtf("oklahoma.RTF", remove.empty = TRUE)
+
+# taking out special characters
+ok <- tibble(text = oklahoma) %>%
+  mutate(text = gsub("[^a-zA-Z]", " ", text))
+
+# cleaning out non-essential words/sections
+ok <- unique(ok) %>%
+  filter(!grepl( "Load-Date", text)) %>%
+  filter(!grepl( "Byline", text)) %>%
+  filter(!grepl( "Body", text)) %>%
+  filter(!grepl( "Byline", text)) %>%
+  filter(!grepl( "Section", text)) %>%
+  filter(!grepl( "Length:", text)) %>%
+  filter(!grepl( "Copyright", text)) %>%
+  filter(!grepl( "End of Document", text)) %>%
+  filter(!grepl( "The Daily Oklahoman", text))
+
+
+# taking every word from rtf file
+ok_word <- ok %>%
+  unnest_tokens(word, text)
+
+# taking out all of the stop words
+ok_word_sw <- ok_word %>%
+      anti_join(stop_words)
+
+# sorting each word by count
+ok_count_sw <- ok_word_sw %>%
+  count(word, sort=TRUE)
+
+# creating bing sentiment
+ok_sentiment_bing <- ok_word_sw %>%
+  inner_join(get_sentiments("bing"))
+
+# creating afinn sentiment
+ok_sentiment_afinn <- ok_word_sw %>%
+  inner_join(get_sentiments("afinn"))
+
+# creating tables for each sentiment analysis
+table(ok_sentiment_bing$sentiment)
+table(ok_sentiment_afinn$value)
+
+```
+
+After creating tables for both sentiment analyses "bing" and "afinn", we can see that the words in articles regarding data science for the state of Oklahoma are generally more positive than negative. There is also a larger range of positive sentiment, as seen in the "afinn" analysis the positive values go up to 5 while the negative values only go down to -3.
+
+We run the same two sentiment analyses on articles located in Illinois.
+
+
+```{r, message = FALSE, echo = FALSE}
+#illinois
+
+# reading in rtf file
+illinois <- read_rtf("illinois.RTF", remove.empty = TRUE)
+
+# taking out special characters
+il <- tibble(text = illinois) %>%
+    mutate(text = gsub("[^a-zA-Z]", " ", text))
+
+# cleaning out non-essential words/sections
+il <- unique(il) %>%
+  filter(!grepl( "Load-Date", text)) %>%
+  filter(!grepl( "Byline", text)) %>%
+  filter(!grepl( "Body", text)) %>%
+  filter(!grepl( "Byline", text)) %>%
+  filter(!grepl( "Section", text)) %>%
+  filter(!grepl( "Length:", text)) %>%
+  filter(!grepl( "Copyright", text)) %>%
+  filter(!grepl( "End of Document", text)) %>%
+  filter(!grepl( "Chicago Daily Herald", text))
+
+# taking every word from rtf file
+il_word <- il %>%
+  unnest_tokens(word, text)
+
+# taking out all of the stop words
+il_word_sw <- il_word %>%
+      anti_join(stop_words)
+
+# sorting each word by count
+il_count_sw <- il_word_sw %>%
+  count(word, sort=TRUE)
+
+# creating bing sentiment
+il_sentiment_bing <- il_word_sw %>%
+  inner_join(get_sentiments("bing"))
+
+# creating afinn sentiment
+il_sentiment_afinn <- il_word_sw %>%
+  inner_join(get_sentiments("afinn"))
+
+# creating tables for each sentiment analysis
+table(il_sentiment_bing$sentiment)
+table(il_sentiment_afinn$value)
+
+
+```
+
+After creating tables for both sentiment analyses "bing" and "afinn", we can see that the words in articles regarding data science for the state of Illinois are also generally more positive than negative. However, the range of sentiment is the same for positive and negative "afinn" values as they both have the absolute value of 4. The very large amount of words characterized as 1 and 2 attributes to this pattern.
+
+It is reasonable to have a more positive sentiment in Illinois than in Oklahoma, as Chicago is located in Illinois and is one of the most industrialized cities in the country, meaning articles may lean towards a growing field like data science. 
+
+```{r, echo = FALSE, message = FALSE, warning= FALSE}
+# term frequency
+
+# function for cleaning out data - removing special characters
+data_prep <- function(x){
+  i <- as_tibble(t(x))
+  ii <- unite(i,"text",remove = TRUE,sep = "") %>%
+    mutate(text = gsub("[^a-zA-Z]", " ", text))
+}
+
+# using data cleaning function on each state (corpus)
+ok_term <- data_prep(oklahoma)
+il_term <- data_prep(illinois)
+
+# creating vector for states
+state <- c("oklahoma", "illinois")
+
+# creating tibble for each state and text
+tf_idf_text <- tibble(state,text=t(tibble(ok_term,il_term,.name_repair = "universal")))
+
+# creating a word count for each word in each state
+word_count <- tf_idf_text %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words) %>%
+  count(state, word, sort = TRUE)
+
+# creating a total_words column
+total_words <- word_count %>% 
+  group_by(state) %>% 
+  summarize(total = sum(n))
+
+# joing two tables to create one big table
+ds_words <- left_join(word_count, total_words)
+
+# binding to create another big table
+ds_words <- ds_words %>%
+  bind_tf_idf(word, state, n)
+
+# order words by tf_idf
+head(ds_words[order(-ds_words$tf_idf), ])
+
+```
+From the chart above, we can see that for the state of Oklahoma, the words "oklahoma", "oklahoman", and "thunder" are the three most important words to the corpus that is all of the Oklahoma articles. These makes sense, as articles located in Oklahoma may revolve around the state and common things like thunder. For the state of Illinois, the most three important words are "illinois", "editionnc", and "mwrd". While "illinois" makes sense, more analysis and possibly more cleaning must be done as "editionnc" and "mwrd" aren't actual words but show up in articles many times. 
+
