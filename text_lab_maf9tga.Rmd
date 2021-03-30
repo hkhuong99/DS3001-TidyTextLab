@@ -1,0 +1,134 @@
+---
+title: "text_lab"
+author: "Brian Wright"
+date: "9/30/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Congratulations you've successfully transferred from being a NBA 'quant' scout to a consultant specializing in US national sentiment! You've been hired by a non-profit in secret to track the level of support nationally and regionally for the field of Data Science. The goal is to get a general idea of patterns associated with articles being written on the broad topic of Data Science (you can also choose to select a sub-topic). In doing so your data science team has decided to explore periodicals from around the country in a effort to track the relative positive or negative sentiment and word frequencies. Luckily your team has access to a world class library search engine call LexusNexus (NexusUni) that provides access to newspapers from around the country dating back decades. You'll first need to decided what words you want to track and what time might be interesting to begin your search. 
+
+You'll need to select several newspapers from different regions in the country limiting the search to 100 articles from each paper, run sentiment analysis with each newspaper serving as a corpus and then compare the level of positive or negative connotation associated with the outcomes. Also, run tf-idf on each corpus (newspapers) and work to compare the differences between the distributions (5 to 6 newspapers should be fine)
+
+Your main goal (and the goal of all practicing data scientists!) is to translate this information into action. What patterns do you see, why do you believe this to be the case? What additional information might you want? Be as specific as possible, but keep in mind this is an initial exploratory effort...more analysis might be needed...but the result can and should advise the next steps you present to the firm. 
+
+
+Please submit a cleanly knitted HTML file describing in detail the steps you took along the way, the results of your analysis and most importantly the implications/next steps you would recommend.  You will report your final results and recommendations next week in class. This will be 5 minutes per group. 
+
+You will need also need to try to collaborate within your group via a GitHub repo, if you choose it would be fine to assign 1 or 2 regions/newspapers per group member, that can then be added to the repo. Create a main repo, everyone should work in this repo and submit independently using branching/pull requests. If you want to try to use pull request to combine everyone's work into a final project, please do so, but it's not a requirement. Select a repo owner that sets up access (push access) for the week, we will rotate owners next week. Also, submit a link to your the GitHub repo (every group member can submit the same link). 
+
+Create collaborations in GitHub: https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-collaborative-development-models
+
+Rstudio Guidance on Git and Github (Including Branching/Pull Requests): https://r-pkgs.org/git.html#git-branch
+
+
+Here is the link to the database search via the UVA Library that should lead you to LexusNexus (Now Nexas Uni)
+https://guides.lib.virginia.edu/az.php?a=l
+
+```{r Setup}
+library(tidyverse)
+install.packages("tidytext")
+library(tidytext)
+install.packages("ggwordcloud")
+library(ggwordcloud)
+install.packages('textdata')
+library(textdata)
+#setwd("/cloud/project/tidytext")
+#save.image("tidytext.RData")
+va_text <- striprtf::read_rtf('va_articles.RTF')
+ut_text <- striprtf::read_rtf('ut_articles.RTF')
+```
+
+Sentiment Analysis of the South East region of the US
+```{r Text Reading}
+va_text <- tibble(va_text)
+View(va_text)
+va_text$va_text <- as.character(va_text$va_text)
+
+va_text <- va_text %>%
+  unnest_tokens(word, va_text)%>%
+  anti_join(stop_words)%>% 
+  count(word, sort=TRUE)
+
+View(va_text)
+```
+
+```{r Sentiment Analysis}
+get_sentiments('afinn')
+get_sentiments('bing')
+
+va_text_affin <- va_text %>%
+  inner_join(get_sentiments("afinn"))#using a inner join to match words and add the sentiment variable
+view(va_text_affin)
+
+va_text_bing <- va_text %>%
+  inner_join(get_sentiments("bing"))
+
+View(va_text_bing)
+
+```
+
+```{r Visualize}
+ggplot(data = va_text_affin, 
+       aes(x=value)
+        )+
+  geom_histogram()+
+  ggtitle("Virginia DS Sentiment Range")+
+  theme_minimal()
+
+table(va_text_bing$sentiment)
+```
+
+```{r Frequency}
+
+```
+
+Sentiment Analysis of the Rocky Mountain Region of the US
+
+```{r Text Reading}
+ut_text <- tibble(ut_text)
+View(ut_text)
+ut_text$ut_text <- as.character(ut_text$ut_text)
+
+ut_text <- ut_text %>%
+  unnest_tokens(word, ut_text)%>%
+  anti_join(stop_words)%>% 
+  count(word, sort=TRUE)
+
+View(ut_text)
+```
+
+```{r Sentiment Analysis}
+get_sentiments('afinn')
+get_sentiments('bing')
+
+ut_text_affin <- ut_text %>%
+  inner_join(get_sentiments("afinn"))#using a inner join to match words and add the sentiment variable
+view(ut_text_affin)
+
+ut_text_bing <- ut_text %>%
+  inner_join(get_sentiments("bing"))
+
+View(ut_text_bing)
+
+```
+
+```{r Visualize}
+ggplot(data = ut_text_affin, 
+       aes(x=value)
+        )+
+  geom_histogram()+
+  ggtitle("Utah DS Sentiment Range")+
+  theme_minimal()
+
+table(ut_text_bing$sentiment)
+```
+
+```{r Frequency}
+
+```
