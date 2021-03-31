@@ -193,58 +193,102 @@ ggplot(data = utah_count_sw, aes(x = fct_reorder(word,n), y = n)) +
   theme_light()
 ```
 
-```{r sentiment analysis,  echo = FALSE, warning = FALSE, message = FALSE}
-#sentiment analysis
+## Sentiment Analysis
+For each of the states within each region, we used bing sentiment analysis in order to determine the percentage of words in the article that are considered positive or negative. Before doing this, we had to read in the data, convert it to a tibble, and flatten the table. After that, we removed the stop words in order to look at the more relevant words to our analysis. By looking at the non-stop words, we were able to learn more about things that are commonly discussed in the data science world in each of these regions. 
+
+# New York
+
+```{r new york sentiment analysis,  echo = FALSE, warning = FALSE, message = FALSE}
 newyork_sentiment_bing <- newyork_words_sw %>% #positive/negative
   inner_join(get_sentiments("bing"))
 
-newyork_sentiment_bing
+newyork_sentiment_counts <- newyork_sentiment_bing %>% count(sentiment)
+newyork_sentiment_total <-  sum(newyork_sentiment_counts["n"])
+prop <- newyork_sentiment_counts["n"]*100/newyork_sentiment_total
+row.names(prop) <- c("negative", "positive")
+prop
+```
 
+# Oregon
+
+```{r oregon sentiment analysis,  echo = FALSE, warning = FALSE, message = FALSE}
 oregon_sentiment_bing <- oregon_words_sw %>% #positive/negative
   inner_join(get_sentiments("bing"))
 
-oregon_sentiment_bing
+oregon_sentiment_counts <- oregon_sentiment_bing %>% count(sentiment)
+oregon_sentiment_total <-  sum(oregon_sentiment_counts["n"])
+prop <- oregon_sentiment_counts["n"]*100/oregon_sentiment_total
+row.names(prop) <- c("negative", "positive")
+prop
+```
 
+# Oklahoma
+
+```{r oklahoma sentiment analysis,  echo = FALSE, warning = FALSE, message = FALSE}
 oklahoma_sentiment_bing <- oklahoma_words_sw %>% #positive/negative
   inner_join(get_sentiments("bing"))
 
-oklahoma_sentiment_bing
+oklahoma_sentiment_counts <- oklahoma_sentiment_bing %>% count(sentiment)
+oklahoma_sentiment_total <-  sum(oklahoma_sentiment_counts["n"])
+prop <- oklahoma_sentiment_counts["n"]*100/oklahoma_sentiment_total
+row.names(prop) <- c("negative", "positive")
+prop
+```
 
+# Illinois
+
+```{r illinois sentiment analysis,  echo = FALSE, warning = FALSE, message = FALSE}
 illinois_sentiment_bing <- illinois_words_sw %>% #positive/negative
   inner_join(get_sentiments("bing"))
 
-illinois_sentiment_bing
+illinois_sentiment_counts <- illinois_sentiment_bing %>% count(sentiment)
+illinois_sentiment_total <-  sum(illinois_sentiment_counts["n"])
+prop <- illinois_sentiment_counts["n"]*100/illinois_sentiment_total
+row.names(prop) <- c("negative", "positive")
+prop
+```
 
+# Virginia
+
+```{r virginia sentiment analysis,  echo = FALSE, warning = FALSE, message = FALSE}
 virginia_sentiment_bing <- virginia_words_sw %>% #positive/negative
   inner_join(get_sentiments("bing"))
 
-virginia_sentiment_bing
+virginia_sentiment_counts <- virginia_sentiment_bing %>% count(sentiment)
+virginia_sentiment_total <-  sum(virginia_sentiment_counts["n"])
+prop <- virginia_sentiment_counts["n"]*100/virginia_sentiment_total
+row.names(prop) <- c("negative", "positive")
+prop
+```
 
+# Utah 
+
+```{r utah sentiment analysis,  echo = FALSE, warning = FALSE, message = FALSE}
 utah_sentiment_bing <- utah_words_sw %>% #positive/negative
   inner_join(get_sentiments("bing"))
 
-utah_sentiment_bing
-
-newyork_sentiment_table <- newyork_sentiment_bing %>% count(sentiment)
-newyork_sentiment_table
-
-oregon_sentiment_table <- oregon_sentiment_bing %>% count(sentiment)
-oregon_sentiment_table
-
-oklahoma_sentiment_table <- oklahoma_sentiment_bing %>% count(sentiment)
-oklahoma_sentiment_table
-
-illinois_sentiment_table <- illinois_sentiment_bing %>% count(sentiment)
-illinois_sentiment_table
-
-virginia_sentiment_table <- virginia_sentiment_bing %>% count(sentiment)
-virginia_sentiment_table
-
-utah_sentiment_table <- utah_sentiment_bing %>% count(sentiment)
-utah_sentiment_table
+utah_sentiment_counts <- utah_sentiment_bing %>% count(sentiment)
+utah_sentiment_total <-  sum(utah_sentiment_counts["n"])
+prop <- utah_sentiment_counts["n"]*100/utah_sentiment_total
+row.names(prop) <- c("negative", "positive")
+prop
 ```
 
-```{r sentiment range, echo = FALSE}
+```{r sentiment analysis,  echo = FALSE, warning = FALSE, message = FALSE, include = FALSE}
+#sentiment analysis
+newyork_sentiment_bing
+oregon_sentiment_bing
+oklahoma_sentiment_bing
+illinois_sentiment_bing
+virginia_sentiment_bing
+utah_sentiment_bing
+```
+
+## Sentiment Range Graphs 
+
+In order to make the sentiment range graphs, we used afinn sentiment analysis in order to analyze the sentiment associated with these words on a bigger scale than just positive/negative. This provides us with a spectrum so we can see if words are strongly negative, slightly negative, neutral, slightly positive, or positive. By giving us these intermediate states, we're able to better understand the sentiment in each of these regions. 
+
+```{r sentiment range, echo = FALSE, warning = FALSE, message = FALSE}
 #sentiment range
 newyork_sentiment_affin <- newyork_words_sw %>%
   inner_join(get_sentiments("afinn")) #using a inner join to match words and add the sentiment variable
@@ -295,7 +339,7 @@ ggplot(data = utah_sentiment_affin, aes(x=value)) +
   theme_minimal()
 ```
 
-```{r word cloud, echo = FALSE}
+```{r word cloud, echo = FALSE, include = FALSE}
 #word cloud
 set.seed(226)
 
@@ -324,7 +368,8 @@ ggplot(utah_count_sw[1:50,], aes(label = word, size = n)) +
   theme_minimal()
 ```
 
-```{r term frequency,  echo = FALSE, warning = FALSE, message = FALSE}
+
+```{r term frequency,  echo = FALSE, warning = FALSE, message = FALSE, include = FALSE}
 #term frequency
 data_prep <- function(x){
   i <- as_tibble(t(x))
@@ -358,5 +403,62 @@ ds_words <- left_join(word_count, total_words)
 ds_words <- ds_words %>%
   bind_tf_idf(word, states, n)
 
-ds_words
+ds_words[order(-ds_words$tf_idf),]
 ```
+## Term Frequency by Region
+
+The term frequency of a region tells us how frequently that word appears in the document; however, if we wanted to measure how important a word is, we can use inverse document frequency (idf). idf decreases the weight for commonly used words and increases the weight for words that are not used very often so we're able to see how relevant the words are. By analyzing he idf for each region, we're able recognize the the most important topics discussed in each region. 
+
+```{r,  echo = FALSE, warning = FALSE, message = FALSE}
+newyork_tf_idf <- filter(ds_words, states == "New York")
+oregon_tf_idf <- filter(ds_words, states == "Oregon")
+oklahoma_tf_idf <- filter(ds_words, states == "Oklahoma")
+illinois_tf_idf <- filter(ds_words, states == "Illinois")
+virginia_tf_idf <- filter(ds_words, states == "Virginia")
+utah_tf_idf <- filter(ds_words, states == "Utah")
+
+newyork_tf_idf[order(-newyork_tf_idf$tf_idf),]
+oregon_tf_idf[order(-oregon_tf_idf$tf_idf),]
+oklahoma_tf_idf[order(-oklahoma_tf_idf$tf_idf),]
+illinois_tf_idf[order(-illinois_tf_idf$tf_idf),]
+virginia_tf_idf[order(-virginia_tf_idf$tf_idf),]
+utah_tf_idf[order(-utah_tf_idf$tf_idf),]
+```
+## Results/Conclusion:
+
+# North East Region (New York):
+Looking at both bing and afinn sentiment analyses, the North East tends to have a slightly positive outlook on data science. The results of the bing analysis showed that roughly 53% of the words used in data science articles were considered positive. When looking at the afinn histogram, we also saw that the results yielded a slightly left skewed distribution with more points on the positive side. 
+
+This skewness could be attributed to the number of big companies in New York. As seen by some of the more populous words in the New York articles, we could see that words like "facebook" and "google" made a good number of occurrences. "company" and "companies" were also among some of the top words in New York articles suggesting a focus on industry. These positively associated words could also be offset by the current environment as well, specifically because of the coronavirus which could be noted by the prevalence of words such as "covid" and "pandemic".
+
+# Pacific Region (Oregon):
+Looking at both bing and afinn sentiment analyses, the Pacific Region tends to have a slightly negative outlook on data science. The results of the bing analysis suggested that 56% of the words used in data science articles were considered negative. When looking at the afinn histogram, we saw that the two largest bins were on the positive side of the histogram, but that there was also a moderate amount of points in the three bins on the negative side. 
+
+This slightly negative skewness could be attributed to the large focus on climate change research being performed in Oregon as seen by the prevalence of words such as "researchers", "research", "climate", and "weather", and "plastic".
+
+# South West Region (Oklahoma):
+Looking at both bing and afinn sentiment analyses, the South West Region tends to have a positive outlook on data science. The result of the bing analysis was 64% positive. When looking at the afinn histogram, we saw that the largest bin sizes were fairly positive and notably bigger than the others. This suggests a fairly positive outlook towards data science. 
+
+This strong left skew could be attributed to sports data since a lot of the relevant words were related to sports teams such as "thunder", "ou", "nba", and "donovan" (basketball coach).
+
+# Mid West Region (Illinois):
+Looking at both bing and afinn sentiment analyses, the Mid West Region tends to have a positive outlook on data science. The result of the bing analysis was 66% positive. When looking at the afinn histogram, we saw that the largest bin sizes were also fairly positive and notably bigger than the others. This suggests a fairuly positive outlook towards data science. 
+
+This strong left skew could be attributed to the desire to expand into the field of data science education. This can be seen through the high prevalence of words such as "students", "school", "education", "learning", and "community".
+
+# South East Region (Virginia):
+Looking at both bing and afinn sentiment analyses, the South East Region tends to have a slightly-positive outlook on data science. The result of the bing analysis was 59% positive and the largest bin size in the afinn histogram was at 2 out of the -5 to 5 range. 
+The positive skew may be due the development of the Data Science School at UVA (the topic of a couple of articles analyzed). But is offset by a lack of knowledge and job opportunities for data science in the region. 
+This can be offset by DS job growth in major industries of the region such as agriculture, fossil fuels, and manufacturing. 
+# Rocky Mountain Region (Utah):
+Looking at both bing and afinn sentiment analyses, the Rocky Mountain Region tends to have a slightly-negative outlook on data science. The result of the bing analysis was 56% negative and the largest bin size in the afinn histogram was at -2 out of the -5 to 5 range. This may be due to limited data science job opportunities outside of major cities (Denver, Salt Lake,...) and lack of knowledge about the field. 
+
+Since the sentiment is relatively neutral, there is definitely opportunity to garner support for the data science in the region with increased publicity and job growth. Also starting data science programs at major univerisities in the region could also increase support as well. 
+
+# Overall
+As a whole, most of the regions were fairly neutral when it came to data science or it was some what positive. This could be because we were looking at the states with more data science articles within each region so that we could have a larger pool of data. In order to improve our analysis, it would be useful to be able to look at a variety of different states within each region so we wouldn't be biased by certain events that are unique to specific regions, such as the opening of new schools or the analysis of sports data in specific regions.
+
+# Additional Information? Next steps?
+Some additional information that I think would be helpful is being able to somehow collect information from social media in each of these regions by looking at the click data or hashtags used often in each of these regions because I think there could be some interesting data there. When I was looking through the data science articles on LexusNexus, I noticed that a lot of them were from data science related publications so I'm not sure how data science related the data science articles that we selected were, even if we did specifically look for "data science" articles. I feel like some of the articles could've just contained the phrase "data science" one or two times, making it so that it isn't really a data science article, but rather an article that contained some form of data science in it. In this case, it would be hard to say that these types of articles would be relevant for our analysis just because it mentioned data science a couple of times. By analyzing social media data, there would be less of a bias since the population of people using social media is bigger than that of people who read/write publications.
+
+In terms of our next steps, I think it would be interesting to be able to collect data from more of the states in each region so we could have a bigger pool of data. I would also want to remove state names or city names for each region since those seemed to make up a good amount of the relevant words for each region. By doing so, we'd be able to see which words in each region are specifically making the sentiment more or less positive/negative.  
