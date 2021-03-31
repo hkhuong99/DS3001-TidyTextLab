@@ -1,0 +1,22 @@
+---
+title: "Analysis"
+author: "Hallie Khuong"
+date: "3/30/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Conclusions:
+
+# North East Region:
+Looking at both bing and afinn sentiment analyses, the North East tends to have a slightly positive outlook on data science. The results of the bing analysis showed that roughly 53% of the words used in data science articles were considered positive. When looking at the afinn histogram, we also saw that the results yielded a slightly left skewed distribution with more points on the positive side. 
+
+This skewness could be attributed to the number of big companies in New York. As seen by some of the more populous words in the New York articles, we could see that words like "facebook" and "google" made a good number of occurrences. "company" and "companies" were also among some of the top words in New York articles suggesting a focus on industry. These positively associated words could also be offset by the current environment as well, specifically because of the coronavirus which could be noted by the prevalence of words such as "covid" and "pandemic".
+
+# Pacific Region:
+Looking at both bing and afinn sentiment analyses, the Pacific Region tends to have a slightly negative outlook on data science. The results of the bing analysis suggested that 56% of the words used in data science articles were considered negative. When looking at the afinn histogram, we saw that the two largest bins were on the positive side of the histogram, but that there was also a moderate amount of points in the three bins on the negative side. 
+
+This slightly negative skewness could be attributed to the large focus on climate change research being performed in Oregon as seen by the prevalence of words such as "researchers", "research", "climate", and "weather", and "plastic".
